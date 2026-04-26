@@ -13,7 +13,11 @@ function generate_poster_with_gemini(string $prompt): array
         return ['ok' => false, 'error' => 'Missing GEMINI_API_KEY in .env'];
     }
 
-    $finalPrompt = "Create a 1:1 square Indian marketing poster as PNG. Keep it readable for mobile users.\n" . $prompt;
+    $systemPrompt = env_value(
+        'GEMINI_SYSTEM_PROMPT',
+        'Create a 1:1 square Indian marketing poster as PNG. Keep it readable for mobile users.'
+    );
+    $finalPrompt = $systemPrompt . "\n" . $prompt;
 
     $endpoint = sprintf(
         'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s',

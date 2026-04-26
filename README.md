@@ -29,6 +29,7 @@ cp .env-example .env
 
 - `GEMINI_API_KEY`
 - `GEMINI_MODEL`
+- `GEMINI_SYSTEM_PROMPT` (optional custom style/system instruction)
 - `ADMIN_LOGIN_PHONE`
 - `ADMIN_LOGIN_EMAIL`
 - `ADMIN_PASSWORD`
@@ -37,7 +38,7 @@ cp .env-example .env
 3. Start PHP server:
 
 ```bash
-php -S 0.0.0.0:8000 -t /home/runner/work/sx-posters/sx-posters
+php -S 0.0.0.0:8000
 ```
 
 4. Open:
@@ -50,3 +51,7 @@ php -S 0.0.0.0:8000 -t /home/runner/work/sx-posters/sx-posters
 - SQLite DB is created automatically at `database/app.sqlite`.
 - Upload folders are under `uploads/`.
 - Ensure PHP has `pdo_sqlite`, `curl`, and `fileinfo` enabled.
+- For production, add rate limiting and stronger login protection (e.g., OTP/2FA) for phone-based authentication.
+- For production, enforce HTTPS and hardened session cookie settings (`Secure`, `HttpOnly`, `SameSite`).
+- For production, prefer storing `ADMIN_PASSWORD` as a `password_hash()` value in `.env`.
+- For production, rotate CSRF/session secrets periodically and set strict security headers (including CSP).

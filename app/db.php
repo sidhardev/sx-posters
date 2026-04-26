@@ -11,14 +11,15 @@ function db(): PDO
         return $pdo;
     }
 
-    $dbPath = env_value('DB_PATH', base_path('database/app.sqlite'));
-    if ($dbPath === null) {
+    $dbPathValue = env_value('DB_PATH', 'database/app.sqlite');
+    if ($dbPathValue === null || $dbPathValue === '') {
         throw new RuntimeException('DB_PATH is not configured.');
     }
+    $dbPath = str_starts_with($dbPathValue, '/') ? $dbPathValue : base_path($dbPathValue);
 
     $dbDir = dirname($dbPath);
     if (!is_dir($dbDir)) {
-        mkdir($dbDir, 0775, true);
+        mkdir($dbDir, 0755, true);
     }
 
     $pdo = new PDO('sqlite:' . $dbPath);

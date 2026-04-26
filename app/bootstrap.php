@@ -37,16 +37,8 @@ function load_env_file(string $file): void
         $key = trim($parts[0]);
         $value = trim($parts[1]);
 
-        if ($value !== '' && (
-            ($value[0] === '"' && str_ends_with($value, '"')) ||
-            ($value[0] === "'" && str_ends_with($value, "'"))
-        )) {
-            $value = substr($value, 1, -1);
-        }
-
         if ($key !== '') {
             $_ENV[$key] = $value;
-            putenv("{$key}={$value}");
         }
     }
 }
@@ -137,13 +129,13 @@ function store_upload(array $file, string $dir, array $allowedMimes): ?string
         default => 'bin',
     };
 
-    $filename = bin2hex(random_bytes(16)) . '.' . $ext;
+    $filename = bin2hex(random_bytes(24)) . '.' . $ext;
     $relative = trim($dir, '/') . '/' . $filename;
     $destination = base_path($relative);
 
     $destinationDir = dirname($destination);
     if (!is_dir($destinationDir)) {
-        mkdir($destinationDir, 0775, true);
+        mkdir($destinationDir, 0755, true);
     }
 
     if (!move_uploaded_file($tmp, $destination)) {

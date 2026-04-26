@@ -47,10 +47,22 @@ function admin_credential_matches(string $identifier, string $password): bool
         return false;
     }
 
-    $idMatch = ($adminPhone !== '' && hash_equals($adminPhone, $identifier)) ||
-        ($adminEmail !== '' && hash_equals(strtolower($adminEmail), strtolower($identifier)));
+    $trimmedIdentifier = trim($identifier);
+    $normalizedIdentifierEmail = strtolower($trimmedIdentifier);
+    $normalizedAdminEmail = strtolower($adminEmail);
 
-    return $idMatch && hash_equals($adminPassword, $password);
+    $idMatch = ($adminPhone !== '' && hash_equals($adminPhone, $trimmedIdentifier)) ||
+        ($adminEmail !== '' && hash_equals($normalizedAdminEmail, $normalizedIdentifierEmail));
+    if (!$idMatch) {
+        return false;
+    }
+
+    $hashInfo = password_get_info($adminPassword);
+    if (($hashInfo['algo'] ?? 0) !== 0) {
+        return password_verify($password, $adminPassword);
+    }
+
+    return hash_equals($adminPassword, $password);
 }
 
 function login_admin(): void

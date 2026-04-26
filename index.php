@@ -10,9 +10,15 @@ $action = $_GET['action'] ?? '';
 $page = $_GET['page'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !verify_csrf()) {
-    http_response_code(419);
-    echo 'CSRF validation failed.';
-    exit;
+    set_flash('error', 'CSRF validation failed.');
+    $redirectTarget = '/';
+    $referer = (string)($_SERVER['HTTP_REFERER'] ?? '');
+    $refererPath = parse_url($referer, PHP_URL_PATH);
+    $refererQuery = parse_url($referer, PHP_URL_QUERY);
+    if (is_string($refererPath) && str_starts_with($refererPath, '/')) {
+        $redirectTarget = $refererPath . (is_string($refererQuery) && $refererQuery !== '' ? '?' . $refererQuery : '');
+    }
+    redirect_to($redirectTarget);
 }
 
 if ($action === 'logout') {
@@ -224,12 +230,19 @@ if ($action === 'generate-poster' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect_to('/');
     }
 
-    $filename = bin2hex(random_bytes(16)) . '.png';
+    $mime = (string)($result['mime'] ?? 'image/png');
+    $ext = match ($mime) {
+        'image/jpeg' => 'jpg',
+        'image/webp' => 'webp',
+        default => 'png',
+    };
+
+    $filename = bin2hex(random_bytes(24)) . '.' . $ext;
     $relativePath = 'uploads/generated/' . $filename;
     $fullPath = base_path($relativePath);
 
     if (!is_dir(dirname($fullPath))) {
-        mkdir(dirname($fullPath), 0775, true);
+        mkdir(dirname($fullPath), 0755, true);
     }
 
     file_put_contents($fullPath, $imageData);
@@ -275,7 +288,6 @@ if ($isAdmin) {
 }
 
 $latestPoster = $_SESSION['latest_poster'] ?? null;
-$appUrl = rtrim((string)env_value('APP_URL', ''), '/');
 ?>
 <!doctype html>
 <html lang="en">
@@ -430,12 +442,13 @@ $appUrl = rtrim((string)env_value('APP_URL', ''), '/');
             </section>
 
             <?php if (is_string($latestPoster) && $latestPoster !== '' && is_file(base_path($latestPoster))): ?>
-                <?php $shareUrl = $appUrl !== '' ? $appUrl . '/' . ltrim($latestPoster, '/') : ''; ?>
+                <?php $shareBaseUrl = rtrim((string)env_value('APP_URL', ''), '/'); ?>
+                <?php $shareUrl = $shareBaseUrl !== '' ? $shareBaseUrl . '/' . ltrim($latestPoster, '/') : ''; ?>
                 <section class="bg-white rounded-xl shadow p-4 sm:p-6 mb-5">
                     <h2 class="text-xl font-semibold mb-3">Latest Poster</h2>
                     <img src="/<?= e($latestPoster) ?>" alt="Generated poster" class="w-full max-w-md rounded border" />
                     <div class="mt-3 flex flex-wrap gap-2">
-                        <a href="/<?= e($latestPoster) ?>" download class="px-4 py-2 bg-green-600 text-white rounded">Download PNG</a>
+                        <a href="/<?= e($latestPoster) ?>" download class="px-4 py-2 bg-green-600 text-white rounded">Download Image</a>
                         <?php if ($shareUrl !== ''): ?>
                             <a target="_blank" rel="noopener" href="https://wa.me/?text=<?= e(urlencode('Check this poster: ' . $shareUrl)) ?>" class="px-4 py-2 bg-emerald-500 text-white rounded">Share on WhatsApp</a>
                         <?php endif; ?>
