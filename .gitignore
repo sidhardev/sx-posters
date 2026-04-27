@@ -1,0 +1,14 @@
+.env
+database/app.sqlite
+uploads/generated/*.png
+uploads/generated/*.jpg
+uploads/generated/*.jpeg
+uploads/generated/*.webp
+uploads/logos/*.png
+uploads/logos/*.jpg
+uploads/logos/*.jpeg
+uploads/logos/*.webp
+uploads/previews/*.png
+uploads/previews/*.jpg
+uploads/previews/*.jpeg
+uploads/previews/*.webp
