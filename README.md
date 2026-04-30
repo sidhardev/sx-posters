@@ -6,7 +6,7 @@ Poster SaaS MVP built with **PHP + SQLite + Tailwind CSS**, based on `goal.md`.
 
 - User auth (phone + password)
 - Business profile with auto-fill on next login
-- Admin login (phone/email + password from `.env`)
+- Admin login (role-based user from DB)
 - Admin template management (add/list, preview upload, category, prompt)
 - Gemini-powered poster generation with variable injection:
   - `{business_name}`
@@ -30,10 +30,11 @@ cp .env-example .env
 - `GEMINI_API_KEY`
 - `GEMINI_MODEL`
 - `GEMINI_SYSTEM_PROMPT` (optional custom style/system instruction)
-- `ADMIN_LOGIN_PHONE`
-- `ADMIN_LOGIN_EMAIL`
-- `ADMIN_PASSWORD`
+- `ADMIN_SEED_PHONE`
+- `ADMIN_SEED_PASSWORD`
 - `APP_URL` (for WhatsApp share links)
+
+Admin seed credentials are used to create (or promote) a user to `admin` on first load.
 
 3. Start PHP server:
 
@@ -53,5 +54,5 @@ php -S 0.0.0.0:8000
 - Ensure PHP has `pdo_sqlite`, `curl`, and `fileinfo` enabled.
 - For production, add rate limiting and stronger login protection (e.g., OTP/2FA) for phone-based authentication.
 - For production, enforce HTTPS and hardened session cookie settings (`Secure`, `HttpOnly`, `SameSite`).
-- For production, prefer storing `ADMIN_PASSWORD` as a `password_hash()` value in `.env`.
+- For production, prefer storing `ADMIN_SEED_PASSWORD` as a `password_hash()` value in `.env`.
 - For production, rotate CSRF/session secrets periodically and set strict security headers (including CSP).

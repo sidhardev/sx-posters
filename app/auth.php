@@ -10,6 +10,12 @@ function current_user_id(): ?int
     return is_int($id) ? $id : null;
 }
 
+function current_user_role(): ?string
+{
+    $role = $_SESSION['user_role'] ?? null;
+    return is_string($role) ? $role : null;
+}
+
 function is_user_logged_in(): bool
 {
     return current_user_id() !== null;
@@ -22,57 +28,21 @@ function require_user(): void
     }
 }
 
-function login_user(int $userId): void
+function login_user(int $userId, string $role): void
 {
     $_SESSION['user_id'] = $userId;
+    $_SESSION['user_role'] = $role;
 }
 
 function logout_user(): void
 {
     unset($_SESSION['user_id']);
+    unset($_SESSION['user_role']);
 }
 
 function is_admin_logged_in(): bool
 {
-    return (bool)($_SESSION['is_admin'] ?? false);
-}
-
-function admin_credential_matches(string $identifier, string $password): bool
-{
-    $adminPhone = env_value('ADMIN_LOGIN_PHONE', '');
-    $adminEmail = env_value('ADMIN_LOGIN_EMAIL', '');
-    $adminPassword = env_value('ADMIN_PASSWORD', '');
-
-    if ($adminPassword === '' || ($adminPhone === '' && $adminEmail === '')) {
-        return false;
-    }
-
-    $trimmedIdentifier = trim($identifier);
-    $normalizedIdentifierEmail = strtolower($trimmedIdentifier);
-    $normalizedAdminEmail = strtolower($adminEmail);
-
-    $idMatch = ($adminPhone !== '' && hash_equals($adminPhone, $trimmedIdentifier)) ||
-        ($adminEmail !== '' && hash_equals($normalizedAdminEmail, $normalizedIdentifierEmail));
-    if (!$idMatch) {
-        return false;
-    }
-
-    $hashInfo = password_get_info($adminPassword);
-    if (($hashInfo['algo'] ?? 0) !== 0) {
-        return password_verify($password, $adminPassword);
-    }
-
-    return hash_equals($adminPassword, $password);
-}
-
-function login_admin(): void
-{
-    $_SESSION['is_admin'] = true;
-}
-
-function logout_admin(): void
-{
-    unset($_SESSION['is_admin']);
+    return is_user_logged_in() && current_user_role() === 'admin';
 }
 
 function require_admin(): void

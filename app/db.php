@@ -38,6 +38,7 @@ function migrate(PDO $pdo): void
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             phone TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT "user",
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )'
     );
@@ -76,4 +77,56 @@ function migrate(PDO $pdo): void
             FOREIGN KEY(template_id) REFERENCES templates(id)
         )'
     );
+
+    ensure_users_role_column($pdo);
+    seed_admin_user($pdo);
+}
+
+function ensure_users_role_column(PDO $pdo): void
+{
+    $columns = $pdo->query("PRAGMA table_info(users)")->fetchAll();
+    foreach ($columns as $column) {
+        if (($column['name'] ?? '') === 'role') {
+            return;
+        }
+    }
+
+    $pdo->exec('ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT "user"');
+}
+
+function seed_admin_user(PDO $pdo): void
+{
+    $adminPhone = env_value('ADMIN_SEED_PHONE', '');
+    $adminPassword = env_value('ADMIN_SEED_PASSWORD', '');
+
+    if ($adminPhone === '' || $adminPassword === '') {
+        return;
+    }
+
+    $stmt = $pdo->prepare('SELECT id, role FROM users WHERE phone = :phone LIMIT 1');
+    $stmt->execute([':phone' => $adminPhone]);
+    $existing = $stmt->fetch();
+
+    if ($existing) {
+        if (($existing['role'] ?? '') !== 'admin') {
+            $update = $pdo->prepare('UPDATE users SET role = :role WHERE id = :id');
+            $update->execute([
+                ':role' => 'admin',
+                ':id' => $existing['id'],
+            ]);
+        }
+        return;
+    }
+
+    $hashInfo = password_get_info($adminPassword);
+    $finalPassword = ($hashInfo['algo'] ?? 0) !== 0
+        ? $adminPassword
+        : password_hash($adminPassword, PASSWORD_DEFAULT);
+
+    $insert = $pdo->prepare('INSERT INTO users (phone, password, role) VALUES (:phone, :password, :role)');
+    $insert->execute([
+        ':phone' => $adminPhone,
+        ':password' => $finalPassword,
+        ':role' => 'admin',
+    ]);
 }

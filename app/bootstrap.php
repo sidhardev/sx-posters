@@ -144,3 +144,19 @@ function store_upload(array $file, string $dir, array $allowedMimes): ?string
 
     return $relative;
 }
+
+function render_view(string $view, array $data = []): void
+{
+    $viewPath = base_path('app/views/' . $view . '.php');
+    if (!is_file($viewPath)) {
+        throw new RuntimeException('View not found: ' . $view);
+    }
+
+    extract($data, EXTR_SKIP);
+
+    ob_start();
+    require $viewPath;
+    $content = ob_get_clean();
+
+    require base_path('app/views/layout.php');
+}
