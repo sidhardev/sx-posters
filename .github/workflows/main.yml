@@ -15,7 +15,6 @@ jobs:
       - name: Get latest code
         uses: actions/checkout@v4
 
-      
       - name: Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -24,7 +23,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: /htdocs/dev.qrala.com/htdocs/sx-posters/ # Remote path (end me '/' zaroori hai)
           
-           exclude: |
+          exclude: |
             **/.git*
             **/.git*/**
             **/.vscode/**
