@@ -1,0 +1,34 @@
+name: Deploy PHP App via FTP
+
+on:
+  push:
+    branches:
+      - prod   
+
+jobs:
+  web-deploy:
+    name: Deploy to Hosting
+    runs-on: ubuntu-latest
+
+    steps:
+      
+      - name: Get latest code
+        uses: actions/checkout@v4
+
+      
+      - name: Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /htdocs/dev.qrala.com/htdocs/sx-posters/ # Remote path (end me '/' zaroori hai)
+          
+           exclude: |
+            **/.git*
+            **/.git*/**
+            **/.vscode/**
+            **/node_modules/**
+            **/.env
+            **/vendor/**
+            **/.github/**
