@@ -98,20 +98,44 @@ function seed_admin_user(PDO $pdo): void
 {
     $adminPhone = env_value('ADMIN_SEED_PHONE', '');
     $adminPassword = env_value('ADMIN_SEED_PASSWORD', '');
+    if ($adminPhone === '') {
+        $adminPhone = env_value('ADMIN_LOGIN_PHONE', '');
+    }
+    if ($adminPassword === '') {
+        $adminPassword = env_value('ADMIN_PASSWORD', '');
+    }
 
     if ($adminPhone === '' || $adminPassword === '') {
         return;
     }
 
-    $stmt = $pdo->prepare('SELECT id, role FROM users WHERE phone = :phone LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id, role, password FROM users WHERE phone = :phone LIMIT 1');
     $stmt->execute([':phone' => $adminPhone]);
     $existing = $stmt->fetch();
 
     if ($existing) {
+        $needsUpdate = false;
         if (($existing['role'] ?? '') !== 'admin') {
-            $update = $pdo->prepare('UPDATE users SET role = :role WHERE id = :id');
+            $needsUpdate = true;
+        }
+
+        $storedPassword = (string)($existing['password'] ?? '');
+        $hashInfo = password_get_info($adminPassword);
+        $envIsHash = ($hashInfo['algo'] ?? 0) !== 0;
+        $passwordMatches = $envIsHash
+            ? hash_equals($adminPassword, $storedPassword)
+            : password_verify($adminPassword, $storedPassword);
+
+        if (!$passwordMatches) {
+            $needsUpdate = true;
+            $storedPassword = $envIsHash ? $adminPassword : password_hash($adminPassword, PASSWORD_DEFAULT);
+        }
+
+        if ($needsUpdate) {
+            $update = $pdo->prepare('UPDATE users SET role = :role, password = :password WHERE id = :id');
             $update->execute([
                 ':role' => 'admin',
+                ':password' => $storedPassword,
                 ':id' => $existing['id'],
             ]);
         }

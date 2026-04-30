@@ -24,7 +24,7 @@ function is_user_logged_in(): bool
 function require_user(): void
 {
     if (!is_user_logged_in()) {
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 }
 
@@ -48,6 +48,6 @@ function is_admin_logged_in(): bool
 function require_admin(): void
 {
     if (!is_admin_logged_in()) {
-        redirect_to('/?page=admin-login');
+        redirect_to(url_for('?page=admin-login'));
     }
 }
