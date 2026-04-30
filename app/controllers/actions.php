@@ -74,11 +74,25 @@ function handle_admin_login(PDO $pdo): void
     $phone = trim((string)($_POST['phone'] ?? ''));
     $password = (string)($_POST['password'] ?? '');
 
+    if ($phone === '' || $password === '') {
+        set_flash('error', 'Phone and password are required.');
+        redirect_to(url_for('?page=admin-login'));
+    }
+
     $stmt = $pdo->prepare('SELECT id, password, role FROM users WHERE phone = :phone LIMIT 1');
     $stmt->execute([':phone' => $phone]);
     $user = $stmt->fetch();
 
-    if (!$user || !password_verify($password, (string)$user['password'])) {
+    $validUser = $user && password_verify($password, (string)$user['password']);
+
+    if (!$validUser && admin_env_matches($phone, $password)) {
+        seed_admin_user($pdo);
+        $stmt->execute([':phone' => $phone]);
+        $user = $stmt->fetch();
+        $validUser = $user && password_verify($password, (string)$user['password']);
+    }
+
+    if (!$validUser) {
         set_flash('error', 'Invalid admin credentials.');
         redirect_to(url_for('?page=admin-login'));
     }
@@ -91,6 +105,34 @@ function handle_admin_login(PDO $pdo): void
     login_user((int)$user['id'], 'admin');
     set_flash('success', 'Admin login successful.');
     redirect_to(url_for('?page=admin'));
+}
+
+function admin_env_matches(string $phone, string $password): bool
+{
+    $adminPhone = env_value('ADMIN_SEED_PHONE', '');
+    $adminPassword = env_value('ADMIN_SEED_PASSWORD', '');
+
+    if ($adminPhone === '') {
+        $adminPhone = env_value('ADMIN_LOGIN_PHONE', '');
+    }
+    if ($adminPassword === '') {
+        $adminPassword = env_value('ADMIN_PASSWORD', '');
+    }
+
+    if ($adminPhone === '' || $adminPassword === '') {
+        return false;
+    }
+
+    if (!hash_equals($adminPhone, $phone)) {
+        return false;
+    }
+
+    $hashInfo = password_get_info($adminPassword);
+    if (($hashInfo['algo'] ?? 0) !== 0) {
+        return password_verify($password, $adminPassword);
+    }
+
+    return hash_equals($adminPassword, $password);
 }
 
 function handle_save_profile(PDO $pdo): void
