@@ -1,4 +1,4 @@
-.env
+
 database/app.sqlite
 uploads/generated/*.png
 uploads/generated/*.jpg

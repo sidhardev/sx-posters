@@ -4,7 +4,7 @@
             <h2 class="text-xl font-semibold">Admin Panel</h2>
         </div>
 
-        <form method="post" action="/?action=admin-login" class="mt-4 space-y-3">
+        <form method="post" action="<?= e(url_for('?action=admin-login')) ?>" class="mt-4 space-y-3">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>" />
             <div>
                 <label class="block text-sm mb-1">Admin Phone</label>
@@ -21,11 +21,11 @@
     <section class="bg-white rounded-xl shadow p-4 sm:p-6">
         <div class="flex items-center justify-between">
             <h2 class="text-xl font-semibold">Admin Panel</h2>
-            <a href="/?action=admin-logout" class="text-sm text-red-600">Logout</a>
+            <a href="<?= e(url_for('?action=admin-logout')) ?>" class="text-sm text-red-600">Logout</a>
         </div>
 
         <div class="grid md:grid-cols-2 gap-5 mt-5">
-            <form method="post" action="/?action=add-template" enctype="multipart/form-data" class="space-y-3 border rounded p-4">
+            <form method="post" action="<?= e(url_for('?action=add-template')) ?>" enctype="multipart/form-data" class="space-y-3 border rounded p-4">
                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>" />
                 <h3 class="font-semibold">Add Template</h3>
                 <input name="name" required placeholder="Template name" class="w-full border rounded px-3 py-2" />
@@ -40,7 +40,7 @@
                 <div class="space-y-3 max-h-[500px] overflow-auto pr-1">
                     <?php foreach ($adminTemplates as $tpl): ?>
                         <div class="border rounded p-2">
-                            <img src="/<?= e((string)$tpl['preview_image']) ?>" alt="preview" class="w-full h-36 object-cover rounded" />
+                            <img src="<?= e(url_for((string)$tpl['preview_image'])) ?>" alt="preview" class="w-full h-36 object-cover rounded" />
                             <p class="font-medium mt-2"><?= e((string)$tpl['name']) ?></p>
                             <p class="text-xs text-slate-500"><?= e((string)$tpl['category']) ?></p>
                             <p class="text-xs mt-1"><?= e((string)$tpl['prompt']) ?></p>

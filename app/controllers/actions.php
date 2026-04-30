@@ -9,14 +9,14 @@ function handle_logout(): void
 {
     logout_user();
     set_flash('success', 'Logged out successfully.');
-    redirect_to('/');
+    redirect_to(url_for(''));
 }
 
 function handle_admin_logout(): void
 {
     logout_user();
     set_flash('success', 'Admin logged out.');
-    redirect_to('/?page=admin-login');
+    redirect_to(url_for('?page=admin-login'));
 }
 
 function handle_register(PDO $pdo): void
@@ -26,14 +26,14 @@ function handle_register(PDO $pdo): void
 
     if ($phone === '' || $password === '') {
         set_flash('error', 'Phone and password are required.');
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 
     $stmt = $pdo->prepare('SELECT id FROM users WHERE phone = :phone LIMIT 1');
     $stmt->execute([':phone' => $phone]);
     if ($stmt->fetch()) {
         set_flash('error', 'Phone already registered. Please login.');
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 
     $hash = password_hash($password, PASSWORD_DEFAULT);
@@ -46,7 +46,7 @@ function handle_register(PDO $pdo): void
 
     login_user((int)$pdo->lastInsertId(), 'user');
     set_flash('success', 'Registration successful.');
-    redirect_to('/');
+    redirect_to(url_for(''));
 }
 
 function handle_login(PDO $pdo): void
@@ -60,13 +60,13 @@ function handle_login(PDO $pdo): void
 
     if (!$user || !password_verify($password, (string)$user['password'])) {
         set_flash('error', 'Invalid login credentials.');
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 
     $role = is_string($user['role'] ?? null) && $user['role'] !== '' ? (string)$user['role'] : 'user';
     login_user((int)$user['id'], $role);
     set_flash('success', 'Welcome back!');
-    redirect_to('/');
+    redirect_to(url_for(''));
 }
 
 function handle_admin_login(PDO $pdo): void
@@ -80,17 +80,17 @@ function handle_admin_login(PDO $pdo): void
 
     if (!$user || !password_verify($password, (string)$user['password'])) {
         set_flash('error', 'Invalid admin credentials.');
-        redirect_to('/?page=admin-login');
+        redirect_to(url_for('?page=admin-login'));
     }
 
     if (($user['role'] ?? '') !== 'admin') {
         set_flash('error', 'This account is not an admin.');
-        redirect_to('/?page=admin-login');
+        redirect_to(url_for('?page=admin-login'));
     }
 
     login_user((int)$user['id'], 'admin');
     set_flash('success', 'Admin login successful.');
-    redirect_to('/?page=admin');
+    redirect_to(url_for('?page=admin'));
 }
 
 function handle_save_profile(PDO $pdo): void
@@ -99,7 +99,7 @@ function handle_save_profile(PDO $pdo): void
 
     $userId = current_user_id();
     if ($userId === null) {
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 
     $businessName = trim((string)($_POST['business_name'] ?? ''));
@@ -108,7 +108,7 @@ function handle_save_profile(PDO $pdo): void
 
     if ($businessName === '' || $businessType === '' || $phone === '') {
         set_flash('error', 'Business name, business type and phone are required.');
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 
     try {
@@ -144,7 +144,7 @@ function handle_save_profile(PDO $pdo): void
         set_flash('error', $t->getMessage());
     }
 
-    redirect_to('/');
+    redirect_to(url_for(''));
 }
 
 function handle_add_template(PDO $pdo): void
@@ -157,7 +157,7 @@ function handle_add_template(PDO $pdo): void
 
     if ($name === '' || $prompt === '' || $category === '') {
         set_flash('error', 'Template name, prompt and category are required.');
-        redirect_to('/?page=admin');
+        redirect_to(url_for('?page=admin'));
     }
 
     try {
@@ -179,7 +179,7 @@ function handle_add_template(PDO $pdo): void
         set_flash('error', $t->getMessage());
     }
 
-    redirect_to('/?page=admin');
+    redirect_to(url_for('?page=admin'));
 }
 
 function handle_generate_poster(PDO $pdo): void
@@ -188,13 +188,13 @@ function handle_generate_poster(PDO $pdo): void
     $userId = current_user_id();
 
     if ($userId === null) {
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 
     $templateId = (int)($_POST['template_id'] ?? 0);
     if ($templateId <= 0) {
         set_flash('error', 'Please select a template.');
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 
     $tplStmt = $pdo->prepare('SELECT id, prompt FROM templates WHERE id = :id LIMIT 1');
@@ -203,7 +203,7 @@ function handle_generate_poster(PDO $pdo): void
 
     if (!$template) {
         set_flash('error', 'Selected template not found.');
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 
     $profileStmt = $pdo->prepare('SELECT business_name, business_type, phone FROM business_profiles WHERE user_id = :user_id LIMIT 1');
@@ -212,7 +212,7 @@ function handle_generate_poster(PDO $pdo): void
 
     if (!$profile) {
         set_flash('error', 'Please save business profile first.');
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 
     $prompt = strtr((string)$template['prompt'], [
@@ -224,13 +224,13 @@ function handle_generate_poster(PDO $pdo): void
     $result = generate_poster_with_gemini($prompt);
     if (!(bool)($result['ok'] ?? false)) {
         set_flash('error', (string)($result['error'] ?? 'Poster generation failed.'));
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 
     $imageData = $result['data'] ?? null;
     if (!is_string($imageData) || $imageData === '') {
         set_flash('error', 'Invalid image data from Gemini.');
-        redirect_to('/');
+        redirect_to(url_for(''));
     }
 
     $mime = (string)($result['mime'] ?? 'image/png');
@@ -259,5 +259,5 @@ function handle_generate_poster(PDO $pdo): void
 
     $_SESSION['latest_poster'] = $relativePath;
     set_flash('success', 'Poster generated successfully.');
-    redirect_to('/');
+    redirect_to(url_for(''));
 }

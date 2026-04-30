@@ -59,8 +59,37 @@ function e(?string $value): string
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
+function app_base_url(): string
+{
+    $envBase = env_value('APP_URL', '');
+    if ($envBase !== '') {
+        return rtrim($envBase, '/');
+    }
+
+    $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '/');
+    $dir = rtrim(dirname($scriptName), '/');
+    return $dir === '.' ? '' : $dir;
+}
+
+function url_for(string $path = ''): string
+{
+    $trimmed = ltrim($path, '/');
+    $base = app_base_url();
+
+    if ($trimmed === '') {
+        return $base !== '' ? $base . '/' : '/';
+    }
+
+    return $base !== '' ? $base . '/' . $trimmed : '/' . $trimmed;
+}
+
 function redirect_to(string $path): void
 {
+    $isAbsolute = (bool)preg_match('~^https?://~i', $path);
+    if (!$isAbsolute && !str_starts_with($path, '/')) {
+        $path = url_for($path);
+    }
+
     header('Location: ' . $path);
     exit;
 }

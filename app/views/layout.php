@@ -11,8 +11,8 @@
     <div class="flex items-center justify-between mb-4">
         <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">🚀 Poster SaaS</h1>
         <div class="space-x-2">
-            <a href="/" class="px-3 py-2 bg-white rounded border text-sm">User Home</a>
-            <a href="/?page=admin-login" class="px-3 py-2 bg-white rounded border text-sm">Admin</a>
+            <a href="<?= e(url_for('')) ?>" class="px-3 py-2 bg-white rounded border text-sm">User Home</a>
+            <a href="<?= e(url_for('?page=admin-login')) ?>" class="px-3 py-2 bg-white rounded border text-sm">Admin</a>
         </div>
     </div>
 
